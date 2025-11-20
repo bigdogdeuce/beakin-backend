@@ -1,0 +1,642 @@
+{
+  "address": "2zHmxdM1weXuEkL7q7R9romZsPNdTLPAHGEPjBFA4da5",
+  "metadata": {
+    "name": "beakin_vault",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "admin_set_bot_authority",
+      "docs": [
+        "Admin: Set bot authority and daily limit",
+        "Only admin can designate which wallet can perform automated disbursements"
+      ],
+      "discriminator": [
+        164,
+        227,
+        72,
+        111,
+        215,
+        186,
+        76,
+        210
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "docs": [
+            "Config with admin + limits"
+          ],
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer (must equal config.admin)"
+          ],
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "new_bot_authority",
+          "type": "pubkey"
+        },
+        {
+          "name": "daily_limit",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "admin_set_emergency_multiplier_bps",
+      "docs": [
+        "Admin: Set emergency multiplier (basis points)",
+        "10_000 = 100% (normal), 2_000 = 20% (reduced limits during emergency)"
+      ],
+      "discriminator": [
+        138,
+        61,
+        130,
+        67,
+        247,
+        82,
+        213,
+        228
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "docs": [
+            "Config with admin + limits"
+          ],
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer (must equal config.admin)"
+          ],
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "bps",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "admin_withdraw",
+      "docs": [
+        "Admin: Emergency withdraw tokens from vault",
+        "Use for recovery, migration, or emergency situations"
+      ],
+      "discriminator": [
+        160,
+        166,
+        147,
+        222,
+        46,
+        220,
+        75,
+        224
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "docs": [
+            "Config with admin + mint + bumps + vault_ata"
+          ],
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer (recipient ATA owner)"
+          ],
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "vault_authority",
+          "docs": [
+            "PDA authority over the vault ATA"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "Config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_ata",
+          "docs": [
+            "PDA-owned vault token account (must equal config.vault_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "admin_ata",
+          "docs": [
+            "Admin's destination ATA for the same mint"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "SPL Token program"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "bot_disburse_rewards",
+      "docs": [
+        "Bot: Disburse rewards to users (with daily limit enforcement)",
+        "Only the designated bot authority can call this"
+      ],
+      "discriminator": [
+        210,
+        111,
+        94,
+        103,
+        248,
+        212,
+        11,
+        70
+      ],
+      "accounts": [
+        {
+          "name": "bot",
+          "docs": [
+            "Bot signer (must match config.bot_authority)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "docs": [
+            "Config with bot_authority and limits"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault_authority",
+          "docs": [
+            "PDA authority over the vault ATA"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "Config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_ata",
+          "docs": [
+            "PDA-owned vault token account"
+          ],
+          "writable": true
+        },
+        {
+          "name": "recipient_ata",
+          "docs": [
+            "Recipient's token account (user receiving rewards)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "SPL Token program"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize",
+      "docs": [
+        "Initialize the Config account (ONE TIME ONLY)",
+        "Sets up the vault with admin, mint, and initial parameters"
+      ],
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "docs": [
+            "Admin who will control the vault"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "docs": [
+            "Config account to be created"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "NSTG token mint"
+          ]
+        },
+        {
+          "name": "vault_authority",
+          "docs": [
+            "Vault authority PDA"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_ata",
+          "docs": [
+            "Vault's token account (must be created before calling initialize)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vault_authority"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System program"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "Token program"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "Associated token program"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "docs": [
+            "Rent sysvar"
+          ],
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "vault_authority_bump",
+          "type": "u8"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Config",
+      "discriminator": [
+        155,
+        12,
+        170,
+        224,
+        30,
+        250,
+        204,
+        130
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "AdminWithdrawEvent",
+      "discriminator": [
+        209,
+        205,
+        149,
+        148,
+        126,
+        161,
+        184,
+        237
+      ]
+    },
+    {
+      "name": "BotDisburseEvent",
+      "discriminator": [
+        87,
+        167,
+        172,
+        81,
+        63,
+        114,
+        2,
+        222
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidMultiplier",
+      "msg": "Invalid multiplier; must be <= 10_000"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidAmount",
+      "msg": "Invalid amount; must be > 0"
+    },
+    {
+      "code": 6002,
+      "name": "InsufficientVaultBalance",
+      "msg": "Vault token account has insufficient balance"
+    },
+    {
+      "code": 6003,
+      "name": "UnauthorizedBot",
+      "msg": "Unauthorized bot wallet"
+    },
+    {
+      "code": 6004,
+      "name": "DailyLimitExceeded",
+      "msg": "Daily disbursement limit exceeded"
+    }
+  ],
+  "types": [
+    {
+      "name": "AdminWithdrawEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BotDisburseEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bot",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "daily_total",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Config",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "bot_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault_authority_bump",
+            "type": "u8"
+          },
+          {
+            "name": "vault_ata",
+            "type": "pubkey"
+          },
+          {
+            "name": "emergency_multiplier_bps",
+            "type": "u16"
+          },
+          {
+            "name": "daily_limit",
+            "type": "u64"
+          },
+          {
+            "name": "daily_disbursed",
+            "type": "u64"
+          },
+          {
+            "name": "last_reset_day",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}
