@@ -8,8 +8,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Solana connection
-const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+// ============================================================
+// SOLANA RPC CONNECTION - UPDATED FOR HELIUS
+// ============================================================
+// Use environment variable for RPC URL, fallback to public endpoint
+const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
+const connection = new Connection(SOLANA_RPC_URL, 'confirmed');
+
+console.log('🌐 Solana RPC:', SOLANA_RPC_URL.includes('helius') ? 'Helius (Premium)' : 'Public (Rate Limited)');
+// ============================================================
 
 // Load bot wallet from environment variable OR file
 let botWallet;
@@ -50,6 +57,7 @@ app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'ok', 
         botWallet: botWallet.publicKey.toBase58(),
+        rpcEndpoint: SOLANA_RPC_URL.includes('helius') ? 'Helius' : 'Public',
         timestamp: new Date().toISOString()
     });
 });
